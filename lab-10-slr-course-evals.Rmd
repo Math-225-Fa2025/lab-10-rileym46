@@ -132,10 +132,12 @@ Linear model is in the form $\hat{y} = b_0 + b_1 x$.
 ```{r linear, eval = TRUE}
 score_bty_fit <- linear_reg() %>%
   set_engine("lm") %>%
-  fit(score ~ bty_avg, data = evals) %>%
-  tidy()
+  fit(score ~ bty_avg, data = evals) 
+tidy(score_bty_fit)
 glimpse(score_bty_fit)
 ```
+`Score = 3.88 + 0.0666*bty_avg. For each point higher rated for bty_avg, expect 0.0666 points higher for score. Scores that have a 0 beauty rating are expected to be 3.88 points/stars.`
+
 5.  Recreate the scatterplot from Exercise 2, and add the regression line to this plot in orange color, with shading for the uncertainty of the line turned off.
 
 ```{r bty-avg-regression, eval = TRUE}
@@ -162,8 +164,9 @@ ggplot(data = evals, aes(y = score, x = bty_avg))+
 
 ```{r glance, eval = TRUE}
 library(broom)
-glimpse(score_bty_fit)$r.squared
+glance(score_bty_fit)$r.squared
 ```
+`This is the percentage of variability in the response variable, score. 0.03502226 is a very small percentage. That means that there isn't much variability in the score and that this is not the best fit for this data.`
 
 *If you haven't done so recently, knit, commit, and push your changes to GitHub with an appropriate commit message. Make sure to commit and push all changed files so that your Git pane is cleared up afterwards.*
 
@@ -171,25 +174,87 @@ glimpse(score_bty_fit)$r.squared
 
 9.  Fit a new linear model called `score_gender_fit` to predict average professor evaluation `score` based on `gender` of the professor.
     Based on the regression output, write the linear model and interpret the slope and intercept in context of the data.
+```{r gender, eval = TRUE}
+score_gender_fit <- linear_reg() %>%
+  set_engine("lm") %>%
+  fit(score ~ gender, data = evals)
+tidy(score_gender_fit)
+glimpse(score_gender_fit)
+```
+`Score = 4.093 + 0.142 * gender. This means that for every time a professor is male, his score is expected to increase by 0.142 points. For every time the professor is male, their score is expected to be 4.093.`
 
 10. What is the equation of the line corresponding to male professors?
     What is it for female professors?
 
+`Male: Score = 4.093 + 0.142 * gender. `
+`Female: Score = `
+
+
 11. Fit a new linear model called `score_rank_fit` to predict average professor evaluation `score` based on `rank` of the professor.
     Based on the regression output, write the linear model and interpret the slopes and intercept in context of the data.
 
+```{r score-rank-fit, eval = TRUE}
+score_rank_fit <- linear_reg() %>%
+  set_engine("lm") %>%
+  fit(score ~ rank, data = evals) 
+tidy(score_rank_fit)
+glimpse(score_rank_fit)
+
+```
+`Score = 4.284 - 0.130 * ranktenure track. For each tenured professor on track, their score is estimated to decrease by .130 points. For each professor without tenure, they are expected to have 4.284 stars.`
+`Score = 4.284 - 0.145 * ranktenured. For each tenured professor, their score is estimated to decrease by 0.145 points.`
+
 12. Create a new variable called `rank_relevel` where `"tenure track"` is the baseline level.
+
+```{r tenure, eval = TRUE}
+evals <- evals %>%
+  mutate(rank_relevel = relevel(evals$rank, ref = "tenure track"))
+```
 
 13. Fit a new linear model called `score_rank_relevel_fit` to predict average professor evaluation `score` based on `rank_relevel` of the professor.
     This is the new (releveled) variable you created in Exercise 12.
     Based on the regression output, write the linear model and interpret the slopes and intercept in context of the data.
     Also determine and interpret the $R^2$ of the model.
+    
+```{r score-rank-relevel-fit, eval = TRUE}
+score_rank_relevel_fit <- linear_reg() %>%
+  set_engine("lm") %>%
+  fit(score ~ rank_relevel, data = evals)
+tidy(score_rank_relevel_fit)
+glimpse(score_rank_relevel_fit)
+
+glance(score_rank_relevel_fit)$r.squared
+```
+`Score = 4.155 + 0.130*teaching. Professors ranked with teaching are expected to have, on average, 0.130 points higher than professors that are tenure track. Professors that are tenure track are expected to have 4.155 stars, on average.`
+`Score = 4.155 - 0.015*tenured. Professors ranked with tenured are expected to have, on average, 0.015 points fewer than professors that are tenure track.`
+`The $r.squared of this model is 0.0116, meaning there is a very weak relationship between the two variables.`
 
 14. Create another new variable called `tenure_eligible` that labels `"teaching"` faculty as `"no"` and labels `"tenure track"` and `"tenured"` faculty as `"yes"`.
+
+```{r tenure-eligible, eval = TRUE}
+evals <- evals %>%
+  mutate(tenure_eligible = case_when(
+    rank == "teaching" ~ "no",
+    rank == "tenure track" ~ "yes",
+    rank == "tenured" ~ "yes",
+  ))
+```
 
 15. Fit a new linear model called `score_tenure_eligible_fit` to predict average professor evaluation `score` based on `tenure_eligible`ness of the professor.
     This is the new (regrouped) variable you created in the previous exercise.
     Based on the regression output, write the linear model and interpret the slopes and intercept in context of the data.
     Also determine and interpret the $R^2$ of the model.
+    
+```{r score-tenure-eligible-fit, eval = TRUE}
+score_tenure_eligible_fit <- linear_reg() %>%
+  set_engine("lm") %>%
+  fit(score ~ tenure_eligible, data = evals)
+tidy(score_tenure_eligible_fit)
+glimpse(score_tenure_eligible_fit)
+
+glance(score_tenure_eligible_fit)$r.squared
+```
+`Score = 4.284 - 0.141*tenure_eligibleyes. For every professor that is eligible for tenure, their score is expected to, on average, decrease by 0.141 points. Professors that are not eligible are expected to have, on average, a score of 4.284.`
+`The $r.squared score for this is 0.0115, meaning that there is a low percentage of variability in the score.`
 
 Knit, *commit, and push your changes to GitHub with an appropriate commit message. Make sure to commit and push all changed files so that your Git pane is cleared up afterwards and review the md document on GitHub to make sure you're happy with the final state of your work.*
